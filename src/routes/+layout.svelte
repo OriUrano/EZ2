@@ -3,10 +3,16 @@
 	import { Settings } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import SettingsModal from '$lib/SettingsModal.svelte';
+	import { theme } from '$lib/stores/theme.js';
 
 	let { children } = $props();
 	let showSettingsModal = $state(false);
 	let apiUrl = $state('');
+	
+	// Subscribe to theme to ensure reactivity
+	$effect(() => {
+		$theme; // This ensures the theme store is subscribed to
+	});
 
 	onMount(() => {
 		const savedUrl = localStorage.getItem('lambdaFunctionUrl');
@@ -20,16 +26,16 @@
 	}
 </script>
 
-<nav class="bg-white shadow">
+<nav class="bg-white dark:bg-neutral-950 shadow dark:shadow-neutral-900">
 	<div class="mx-auto max-w-7xl px-6">
 		<div class="flex justify-between h-16">
 			<div class="flex items-center">
-				<a href="/" class="text-3xl font-bold text-gray-900">EZ2</a>
+				<a href="/" class="text-3xl font-bold text-neutral-900 dark:text-white">EZ2</a>
 			</div>
 			<div class="flex items-center gap-2">
 				<button 
 					onclick={() => window.dispatchEvent(new CustomEvent('refreshRequested'))}
-					class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+					class="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-lg transition-colors"
 					title="Refresh"
 					aria-label="Refresh data"
 				>
@@ -42,7 +48,7 @@
 				</button>
 				<button 
 					onclick={openSettings}
-					class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+					class="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-lg transition-colors"
 					title="Settings"
 					aria-label="Open settings"
 				>

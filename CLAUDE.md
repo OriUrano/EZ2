@@ -28,6 +28,9 @@ src/
 │   └── dashboard/
 │       └── +page.svelte        # EC2 dashboard page
 ├── lib/
+│   ├── SettingsModal.svelte    # Settings modal with dark mode toggle
+│   ├── stores/
+│   │   └── theme.ts           # Dark mode state management
 │   └── index.ts               # Shared utilities
 ├── app.css                    # Global styles
 ├── app.d.ts                   # TypeScript declarations
@@ -40,12 +43,14 @@ lambda/
 
 ## Key Features
 1. **EC2 Instance Monitoring** - Real-time display of EC2 instances with status, IP addresses, instance types, and metadata
-2. **Responsive Design** - Mobile-friendly interface using Tailwind CSS
-3. **Serverless Backend** - Lambda Function URLs for API endpoints
-4. **Static Site Generation** - Can be deployed as static site
+2. **Dark Mode Support** - Toggle between light and dark themes with system preference detection
+3. **Responsive Design** - Mobile-friendly interface using Tailwind CSS
+4. **Serverless Backend** - Lambda Function URLs for API endpoints
+5. **Static Site Generation** - Can be deployed as static site
 
 ## Important Notes
 - Uses Svelte 5 syntax with `$state()` for reactivity
+- Dark mode preferences are stored in localStorage and respect system preferences
 - Lambda Function URL must be configured in the dashboard UI
 - Requires specific IAM permissions for Lambda to access EC2
 - Static site generation enabled for deployment flexibility
@@ -56,3 +61,6 @@ lambda/
 - Maintain responsive design patterns
 - Keep components focused and reusable
 - Use TypeScript for type safety
+
+## Development Notes
+- DO NOT run `npm run dev` automatically - user will start the dev server manually
