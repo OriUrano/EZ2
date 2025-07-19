@@ -1,9 +1,25 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 
-	let instances = $state([]);
+	interface Tag {
+		Key: string;
+		Value: string;
+	}
+
+	interface Instance {
+		instanceId: string;
+		instanceType: string;
+		state: string;
+		publicIpAddress?: string;
+		privateIpAddress?: string;
+		availabilityZone?: string;
+		launchTime?: string;
+		tags: Tag[];
+	}
+
+	let instances = $state<Instance[]>([]);
 	let loading = $state(true);
-	let error = $state(null);
+	let error = $state<string | null>(null);
 	let apiUrl = $state('');
 
 	const statusColors = {
@@ -34,19 +50,19 @@
 			const data = await response.json();
 			instances = data.instances || [];
 		} catch (err) {
-			error = err.message;
+			error = err instanceof Error ? err.message : 'An error occurred';
 			instances = [];
 		} finally {
 			loading = false;
 		}
 	}
 
-	function getTagValue(tags, key) {
+	function getTagValue(tags: Tag[], key: string): string {
 		const tag = tags.find(t => t.Key === key);
 		return tag ? tag.Value : '-';
 	}
 
-	function formatDate(dateString) {
+	function formatDate(dateString?: string): string {
 		if (!dateString) return '-';
 		return new Date(dateString).toLocaleString();
 	}
@@ -59,50 +75,38 @@
 		} else {
 			loading = false;
 		}
+
+		// Listen for settings updates
+		const handleSettingsUpdate = () => {
+			const savedUrl = localStorage.getItem('lambdaFunctionUrl');
+			if (savedUrl) {
+				apiUrl = savedUrl;
+				fetchInstances();
+			}
+		};
+
+		// Listen for refresh requests
+		const handleRefreshRequest = () => {
+			fetchInstances();
+		};
+
+		window.addEventListener('settingsUpdated', handleSettingsUpdate);
+		window.addEventListener('refreshRequested', handleRefreshRequest);
+		
+		return () => {
+			window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+			window.removeEventListener('refreshRequested', handleRefreshRequest);
+		};
 	});
 
-	function saveApiUrl() {
-		localStorage.setItem('lambdaFunctionUrl', apiUrl);
-		fetchInstances();
-	}
 </script>
 
 <svelte:head>
-	<title>EC2 Dashboard</title>
+	<title>EZ2 Dashboard</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50 p-6">
 	<div class="mx-auto max-w-7xl">
-		<div class="mb-8">
-			<h1 class="text-3xl font-bold text-gray-900">EC2 Dashboard</h1>
-			<p class="mt-2 text-gray-600">Monitor and manage your AWS EC2 instances</p>
-		</div>
-
-		<!-- API URL Configuration -->
-		<div class="mb-6 rounded-lg bg-white p-6 shadow">
-			<h2 class="mb-4 text-lg font-semibold text-gray-900">Lambda Function URL</h2>
-			<div class="flex gap-4">
-				<input
-					type="url"
-					bind:value={apiUrl}
-					placeholder="https://your-lambda-function-url.lambda-url.region.on.aws/"
-					class="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-				/>
-				<button
-					onclick={saveApiUrl}
-					class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-				>
-					Save & Fetch
-				</button>
-				<button
-					onclick={fetchInstances}
-					disabled={!apiUrl || loading}
-					class="rounded-md bg-gray-600 px-4 py-2 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
-				>
-					Refresh
-				</button>
-			</div>
-		</div>
 
 		<!-- Error Display -->
 		{#if error}
@@ -224,7 +228,7 @@
 										{instance.instanceType}
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
-										<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {statusColors[instance.state] || 'bg-gray-100 text-gray-800'}">
+										<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {statusColors[instance.state as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}">
 											{instance.state}
 										</span>
 									</td>
